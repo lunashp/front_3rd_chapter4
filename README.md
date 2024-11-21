@@ -2,7 +2,7 @@
 
 ## 개요
 
-![프론트엔드 배포 파이프라인 다이어그램](../luna-app/public/frontendDiagram.png)
+![프론트엔드 배포 파이프라인 다이어그램](./luna-app/public/frontendDiagram.png)
 
 ### 1. **이벤트 트리거**
 
@@ -123,8 +123,8 @@ CDN 도입 후 (CloudFront 사용)
 
 #### 5.1. S3
 
-![s3BucketLuna](../luna-app/public/s3.png)
+![s3BucketLuna](./luna-app/public/s3.png)
 
 #### 5.2. CloudFront
 
-![CloudFrontLuna](../luna-app/public/cloudFront.png)
+![CloudFrontLuna](./luna-app/public/cloudFront.png)
