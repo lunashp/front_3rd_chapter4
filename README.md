@@ -60,3 +60,71 @@
   - CloudFront는 기본적으로 콘텐츠를 캐싱하여 성능을 최적화합니다. 새로 배포된 파일이 S3에 업로드되더라도 CloudFront 캐시가 갱신되지 않으면 오래된 콘텐츠가 제공될 수 있습니다. 이를 방지하기 위해 aws cloudfront create-invalidation 명령어를 사용하여 CloudFront 캐시를 비웁니다.
 - Repository secret과 환경변수:
   - GitHub Actions에서 민감한 정보를 안전하게 저장하고 사용하는 방법입니다. AWS 자격 증명(AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY), S3 버킷 이름, CloudFront 배포 ID 등을 repository secret으로 설정하여 워크플로에서 참조합니다. 이를 통해 민감한 데이터 노출 없이 CI/CD 파이프라인을 실행할 수 있습니다.
+
+## CDN과 성능최적화
+
+> CDN 도입 전과 도입 후의 성능 개선 보고서 작성
+
+### 1. 실험 환경
+
+- 배포 방식
+  - CDN 도입 전: AWS S3 버킷(서울 리전)에서 정적 파일을 직접 제공.
+  - CDN 도입 후: CloudFront에서 캐싱 및 콘텐츠 배포.
+- 측정 방법: DevTools Network 패널을 활용하여 리소스 로드 시간, DOMContentLoaded 시간, 및 document 크기 비교.
+
+### 2. 데이터 분석
+
+CDN 도입 전 (S3 버킷 사용)
+
+- 리소스 로드 시간
+  - 총 리소스: 16개
+  - DOMContentLoaded: 113ms
+  - 전체 로드 시간: 219ms
+- 문서 크기
+  - HTML document 파일 크기: 12.4 KB
+- 특징
+  - 모든 요청이 ap-northeast-2 리전의 S3 버킷에서 처리됨.
+  - 네트워크 지연 및 리전 간 거리에 따라 성능 저하 가능성 존재.
+  - 캐싱 미지원으로 인해 동일 파일 요청 시 매번 새롭게 데이터가 전송됨.
+
+CDN 도입 후 (CloudFront 사용)
+
+- 리소스 로드 시간
+  - 총 리소스: 17개
+  - DOMContentLoaded: 148ms
+  - 전체 로드 시간: 231ms
+- 문서 크기
+  - HTML document 파일 크기: 3.2 KB
+- 특징
+  - 캐싱된 정적 파일을 가까운 엣지 로케이션에서 빠르게 제공.
+  - HTML 문서를 압축해 파일 크기가 74.2% 감소.
+  - 추가 리소스(favicon.ico)가 포함되었음에도 전체 네트워크 비용 절감 효과가 나타남.
+
+### 3. 성능 개선 요약
+
+| **항목**         | **CDN 도입 전 (S3)** | **CDN 도입 후 (CloudFront)** | **변화**       |
+| ---------------- | -------------------- | ---------------------------- | -------------- |
+| DOMContentLoaded | 113ms                | 148ms                        | **35ms 증가**  |
+| 전체 로드 시간   | 219ms                | 231ms                        | **12ms 증가**  |
+| HTML 문서 크기   | 12.4 KB              | 3.2 KB                       | **74.2% 감소** |
+
+### 4. 결론 및 장점
+
+- 문서 크기 최적화
+  - CloudFront는 HTML 문서를 압축하여 파일 크기를 74.2% 줄임으로써 네트워크 대역폭을 크게 절약하였습니다.
+- 캐싱 및 엣지 로케이션 활용
+  - 캐싱된 리소스를 사용자와 가까운 엣지 로케이션에서 제공하여 전 세계 사용자를 대상으로 효율적인 콘텐츠 제공이 가능해졌습니다.
+- 트래픽 최적화
+  - S3 버킷에 대한 직접 요청이 감소하여, 트래픽 비용 절감 및 서버 부하를 완화할 수 있습니다.
+- 리소스 로드 시간 변화
+  - DOMContentLoaded와 전체 로드 시간이 각각 35ms, 12ms 증가했지만, 이는 CloudFront 초기 설정으로 인해 발생하는 지연으로 판단됩니다. 캐싱이 안정화된 후 전반적인 로드 성능 개선이 예상됩니다.
+
+### 5. 첨부파일
+
+#### 5.1. S3
+
+![s3BucketLuna](../luna-app/public/s3.png)
+
+#### 5.2. CloudFront
+
+![CloudFrontLuna](../luna-app/public/cloudFront.png)
