@@ -2,7 +2,7 @@
 
 ## 개요
 
-![프론트엔드 배포 파이프라인 다이어그램](/public/cloudFront.png)
+![프론트엔드 배포 파이프라인 다이어그램](/public/frontendDiagram.png)
 
 ### 1. **이벤트 트리거**
 
